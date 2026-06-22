@@ -91,6 +91,14 @@ def get_activities():
 @app.post("/activities/{activity_name}/signup")
 def signup_for_activity(activity_name: str, email: str):
     """Sign up a student for an activity"""
+    # Validate inputs are not empty
+    if not activity_name or not email:
+        raise HTTPException(status_code=400, detail="Activity name and email are required")
+    
+    # Validate email format (basic check)
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
     # Validate activity exists
     if activity_name not in activities:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -106,3 +114,24 @@ def signup_for_activity(activity_name: str, email: str):
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+
+@app.delete("/activities/{activity_name}/remove")
+def remove_participant_from_activity(activity_name: str, email: str):
+    """Remove a student from an activity"""
+    # Validate inputs are not empty
+    if not activity_name or not email:
+        raise HTTPException(status_code=400, detail="Activity name and email are required")
+    
+    # Validate activity exists
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Get the specific activity
+    activity = activities[activity_name]
+    # Validate student is signed up
+    if email not in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student not signed up for this activity")
+    # Remove student
+    activity["participants"].remove(email)
+    return {"message": f"Removed {email} from {activity_name}"}
